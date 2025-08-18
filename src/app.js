@@ -59,15 +59,29 @@ app.delete("/user", async (req,res) => {
 });
 
 // Update data of the user
-app.patch("/user", async (req,res) => {
-    const userId = req.body.userId;
+// app.patch("/user", async (req,res) => {
+//     const userId = req.body.Id;
+//     const data = req.body;
+//     console.log(data);
+//     try{
+//         await User.findByIdAndUpdate({_id: userId},data);
+//         res.send("User updated successfully");
+//     } catch (err) {
+//         res.status(400).send("something went wrong");
+//     }
+// })
+
+app.patch("/user", async(req,res) => {
+    const emailId = req.body.emailId;
     const data = req.body;
-    console.log(data);
     try{
-        await User.findByIdAndUpdate({_id: userId},data);
-        res.send("User updated successfully");
-    } catch (err) {
-        res.status(400).send("something went wrong");
+        await User.findOneAndUpdate({emailId: emailId},data, {
+            runValidators: true,
+            returnDocument: "after",
+        });
+        res.send("User Updated successfully");
+    } catch(err) {
+        res.status(400).send("UPDATED FAILED :" + err.message);
     }
 })
 

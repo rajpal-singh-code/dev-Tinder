@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const validator = require("validator");
 
 const UserSchema = new mongoose.Schema({
     firstName: {
@@ -16,10 +17,20 @@ const UserSchema = new mongoose.Schema({
         unique: true,
         trim: true,
         lowercase: true,
+        validate(value){
+            if(!validator.isEmail(value)) {
+                throw new Error("Invalid email address: "+ value);
+            }
+        }
     },
     password: {
         type: String,
         required: true,
+        validate(value){
+            if(!validator.isStrongPassword(value)) {
+                throw new Error("this is not strong password : "+ value);
+            }
+        }
     },
     age: {
         type: Number
@@ -37,7 +48,12 @@ const UserSchema = new mongoose.Schema({
     },
     photoUrl: {
         type: String,
-        default: "https://www.shutterstock.com/image-photo/blond-hair-girl-taking-photo-260nw-2492842415.jpg"
+        default: "https://www.shutterstock.com/image-photo/blond-hair-girl-taking-photo-260nw-2492842415.jpg",
+        validate(value){
+            if(!validator.isURL(value)) {
+                throw new Error("Invalid URL address: "+ value);
+            }
+        }
     },
     about: {
         type: String,

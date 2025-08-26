@@ -4,8 +4,11 @@ const connectDB = require("./config/database");
 const User = require("./models/user");
 const { validateSignUpData } = require("./utils/validation");
 const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 
 app.use(express.json()); 
+app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
     try {
@@ -54,10 +57,43 @@ app.post("/login", async(req,res) => {
         const user = await User.findOne({ emailId: emailId});
         if(!user) throw new Error("Invalid credentials");
         const isPassword = await bcrypt.compare(password,user.password);
-        if(!isPassword) throw new Error("Invalid credentials");
-        else res.status(200).send("Login Sucessfully");
-    } catch (err){
+        if(isPassword) {
+
+            // Create a JWT Token
+            const token = await jwt.sign({ _id: user._id}, "DEV@Tinder$798");
+            console.log(token);
+
+            // Add the token to cookie and send the response back to the user
+            res.cookie("token", token);
+            res.status(200).send("Login Sucessfully");
+        } else {
+            throw new Error("Invalid credentials");
+        }
+
+    } catch(err){
         res.status(404).send("ERROR : "+ err.message);
+    }
+})
+
+app.get("/profile", async (req,res) => {
+    try {
+        const cookies = req.cookies;
+
+        const {token} = cookies;
+        if(!token)
+            throw new Error("Invalid Token");
+
+        const decodedMessage = await jwt.verify(token, "DEV@Tinder$798");
+        const { _id } = decodedMessage;
+        console.log("Logged In user is: " + _id);
+
+        const user = await User.findById( _id);
+        if(!user)
+            throw new Error("User does not exist");
+
+        res.send(user);
+    } catch (err) {
+        res.status(400).send("ERROR : "+ err.message);
     }
 })
 
@@ -140,3 +176,5 @@ connectDB()
 
     // if you want to use validator then install : npm install validator
     // if you want to password encrypt then install : npm install bcrypt
+    // Without cookie-parser, Express does not automatically parse these values : npm install cookie-parser.
+    // Because in Node.js/Express, when we use JWT (JSON Web Token) for authentication, we need a way to: 1.Create (sign) JWT tokens.  2.Verify JWT tokens.   3.Decode JWT tokens.  : npm install jsonwebtoekn

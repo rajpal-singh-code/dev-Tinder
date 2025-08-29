@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const UserSchema = new mongoose.Schema({
     firstName: {
@@ -37,11 +39,15 @@ const UserSchema = new mongoose.Schema({
     },
     gender: {
         type: String,
-        validate(value){
-            if(!["male", "female","ohers"].includes(value)){
-                throw new Error("Gender data is not valid");
-            }
+        enum: {
+            values: ["male","female", "other"],
+            message: `{VALUE} is not a valid gender type`,
         },
+        // validate(value){
+        //     if(!["male", "female","ohers"].includes(value)){
+        //         throw new Error("Gender data is not valid");
+        //     }
+        // },
     },
     phoneNo: {
         type: Number
@@ -66,4 +72,22 @@ const UserSchema = new mongoose.Schema({
     timestamps: true,
 })
 
+UserSchema.methods.getJWT = async function() {
+    const user = this;
+    const token = jwt.sign({ _id: user._id}, "DEV@Tinder$798", {expiresIn: "7d",});
+
+    return token;
+}
+
+UserSchema.methods.validatePassword = async function(passwordInputByUser) {
+    const user = this;
+    const passwordHash = user.password;
+
+    const isPasswordValid = await bcrypt.compare(passwordInputByUser,passwordHash);
+
+    return isPasswordValid;
+}
+
 module.exports = mongoose.model("User", UserSchema); 
+
+// This keyword does not work with arrow function 

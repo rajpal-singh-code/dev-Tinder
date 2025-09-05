@@ -72,6 +72,8 @@ const UserSchema = new mongoose.Schema({
     timestamps: true,
 })
 
+// UserSchema.index({ firstName: 1 });  // if you want to do indexing the database then it will need it.  but db need lots of work for this that's why not use necessary
+
 UserSchema.methods.getJWT = async function() {
     const user = this;
     const token = jwt.sign({ _id: user._id}, "DEV@Tinder$798", {expiresIn: "7d",});
